@@ -1,17 +1,19 @@
+import { useRouter } from 'expo-router';
 import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 // Statut simulé pour l'instant — sera remplacé par la vraie donnée Firebase plus tard
 const aVideoEnAttente = false;
 
 export default function AccueilScreen() {
+  const router = useRouter();
+
   const handleFilmer = () => {
     // TODO: ouvrir la caméra (prochaine étape)
     Alert.alert('Filmer', 'Écran caméra à venir');
   };
 
   const handleImporter = () => {
-    // TODO: ouvrir le sélecteur de galerie (prochaine étape)
-    Alert.alert('Importer', 'Sélecteur de galerie à venir');
+    router.push('/consignes');
   };
 
   if (aVideoEnAttente) {
