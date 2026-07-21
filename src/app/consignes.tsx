@@ -1,34 +1,16 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 const DUREE_MAX_SECONDES = 5;
 
 export default function ConsignesScreen() {
   const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode: string }>();
+  const modeFilmer = mode === 'filmer';
 
-  const handleContinuer = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        'Permission refusée',
-        "L'application a besoin d'accéder à ta galerie pour choisir une vidéo."
-      );
-      return;
-    }
-
-    const resultat = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      allowsEditing: false,
-      quality: 1,
-    });
-
-    if (resultat.canceled) {
-      return;
-    }
-
-    const video = resultat.assets[0];
+  const traiterVideo = async (video: { uri: string; duration?: number | null; width?: number; height?: number }) => {
     const dureeSecondes = (video.duration ?? 0) / 1000;
     const estPortrait = (video.height ?? 0) > (video.width ?? 0);
 
@@ -57,6 +39,60 @@ export default function ConsignesScreen() {
     }
   };
 
+  const handleFilmer = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        'Permission refusée',
+        "L'application a besoin d'accéder à ta caméra pour filmer."
+      );
+      return;
+    }
+
+    const resultat = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['videos'],
+      videoMaxDuration: DUREE_MAX_SECONDES,
+      allowsEditing: false,
+    });
+
+    if (resultat.canceled) {
+      return;
+    }
+
+    await traiterVideo(resultat.assets[0]);
+  };
+
+  const handleImporter = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        'Permission refusée',
+        "L'application a besoin d'accéder à ta galerie pour choisir une vidéo."
+      );
+      return;
+    }
+
+    const resultat = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (resultat.canceled) {
+      return;
+    }
+
+    await traiterVideo(resultat.assets[0]);
+  };
+
+  const handleContinuer = () => {
+    if (modeFilmer) {
+      handleFilmer();
+    } else {
+      handleImporter();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.titre}>Avant d'envoyer</Text>
@@ -69,7 +105,9 @@ export default function ConsignesScreen() {
       </View>
 
       <Pressable style={styles.bouton} onPress={handleContinuer}>
-        <Text style={styles.boutonTexte}>Choisir la vidéo</Text>
+        <Text style={styles.boutonTexte}>
+          {modeFilmer ? 'Filmer' : 'Choisir la vidéo'}
+        </Text>
       </Pressable>
 
       <Pressable style={styles.retour} onPress={() => router.back()}>
