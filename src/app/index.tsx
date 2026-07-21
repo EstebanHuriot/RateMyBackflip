@@ -1,98 +1,127 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+// Statut simulé pour l'instant — sera remplacé par la vraie donnée Firebase plus tard
+const aVideoEnAttente = false;
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+export default function AccueilScreen() {
+  const handleFilmer = () => {
+    // TODO: ouvrir la caméra (prochaine étape)
+    Alert.alert('Filmer', 'Écran caméra à venir');
+  };
+
+  const handleImporter = () => {
+    // TODO: ouvrir le sélecteur de galerie (prochaine étape)
+    Alert.alert('Importer', 'Sélecteur de galerie à venir');
+  };
+
+  if (aVideoEnAttente) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.titre}>RateMyBackflip</Text>
+        </View>
+        <View style={styles.statutContainer}>
+          <Text style={styles.statut}>
+            Ta vidéo est en cours de notation.{'\n'}Reviens un peu plus tard !
+          </Text>
+        </View>
+        <View style={styles.espaceVide} />
+      </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.titre}>RateMyBackflip</Text>
+        <Text style={styles.sousTitre}>Montre-nous ton salto arrière</Text>
+      </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <Image
+        source={require('../../assets/backflip-illustration.png')}
+        style={styles.illustration}
+        resizeMode="contain"
+      />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.boutonsContainer}>
+        <Pressable style={styles.bouton} onPress={handleFilmer}>
+          <Text style={styles.boutonTexte}>Filmer</Text>
+        </Pressable>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <Pressable style={[styles.bouton, styles.boutonSecondaire]} onPress={handleImporter}>
+          <Text style={styles.boutonTexteSecondaire}>Importer depuis la galerie</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: '#0b0f1e',
+    paddingHorizontal: 24,
+    paddingTop: 70,
+    paddingBottom: 50,
+    justifyContent: 'space-between',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
+  header: {
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
+  titre: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#c6a15b',
     textAlign: 'center',
   },
-  code: {
-    textTransform: 'uppercase',
+  sousTitre: {
+    fontSize: 15,
+    color: '#ffffff',
+    textAlign: 'center',
+    marginTop: 10,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  statutContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  statut: {
+    fontSize: 16,
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  espaceVide: {
+    height: 1,
+  },
+  illustration: {
+    width: 330,
+    height: 330,
+    alignSelf: 'center',
+  },
+  boutonsContainer: {
+    width: '100%',
+  },
+  bouton: {
+    backgroundColor: '#c6a15b',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  boutonSecondaire: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#c6a15b',
+  },
+  boutonTexte: {
+    color: '#0b0f1e',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  boutonTexteSecondaire: {
+    color: '#c6a15b',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
