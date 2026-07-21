@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-// Statut simulé pour l'instant — sera remplacé par la vraie donnée Firebase plus tard
+// Statut simulé pour l'instant — sera remplacé par la vraie donnée Supabase plus tard
 const aVideoEnAttente = false;
 
 export default function AccueilScreen() {
