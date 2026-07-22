@@ -13,3 +13,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// Garantit qu'un utilisateur (même anonyme) est connecté avant d'utiliser Supabase.
+// Lève une erreur explicite plutôt que de renvoyer null, pour éviter les soucis de type ailleurs dans le code.
+export async function ensureUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    return session.user;
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    throw error;
+  }
+  if (!data.user) {
+    throw new Error("Impossible de créer un utilisateur anonyme.");
+  }
+  return data.user;
+}
