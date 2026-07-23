@@ -59,6 +59,7 @@ export default function ConfirmationScreen() {
         .insert({
           user_id: user.id,
           statut: 'en_attente',
+          chemin_video: cheminFichier,
         });
 
       if (erreurInsertion) {

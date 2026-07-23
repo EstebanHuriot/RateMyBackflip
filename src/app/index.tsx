@@ -3,10 +3,13 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ensureUser, supabase } from '../lib/supabase';
 
+type EtatAccueil = 'normal' | 'en_attente' | 'notee';
+
 export default function AccueilScreen() {
   const router = useRouter();
   const [chargement, setChargement] = useState(true);
-  const [aVideoEnAttente, setAVideoEnAttente] = useState(false);
+  const [etat, setEtat] = useState<EtatAccueil>('normal');
+  const [videoId, setVideoId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -18,17 +21,25 @@ export default function AccueilScreen() {
           const user = await ensureUser();
           const { data, error } = await supabase
             .from('videos')
-            .select('id')
+            .select('id, statut')
             .eq('user_id', user.id)
-            .eq('statut', 'en_attente')
+            .order('created_at', { ascending: false })
             .limit(1);
 
           if (!annule) {
-            if (error) {
-              console.log('Erreur vérification statut :', error.message);
-              setAVideoEnAttente(false);
+            if (error || !data || data.length === 0) {
+              setEtat('normal');
+              setVideoId(null);
             } else {
-              setAVideoEnAttente((data?.length ?? 0) > 0);
+              const derniere = data[0];
+              if (derniere.statut === 'en_attente') {
+                setEtat('en_attente');
+              } else if (derniere.statut === 'notee') {
+                setEtat('notee');
+                setVideoId(derniere.id);
+              } else {
+                setEtat('normal');
+              }
             }
           }
         } catch (erreur: any) {
@@ -56,6 +67,12 @@ export default function AccueilScreen() {
     router.push({ pathname: '/consignes', params: { mode: 'importer' } });
   };
 
+  const handleVoirNote = () => {
+    if (videoId) {
+      router.push({ pathname: '/note', params: { videoId } });
+    }
+  };
+
   if (chargement) {
     return (
       <View style={styles.container}>
@@ -66,7 +83,7 @@ export default function AccueilScreen() {
     );
   }
 
-  if (aVideoEnAttente) {
+  if (etat === 'en_attente') {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -82,6 +99,28 @@ export default function AccueilScreen() {
           <Text style={styles.statut}>
             Ta vidéo est en cours de notation.{'\n'}Reviens un peu plus tard !
           </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (etat === 'notee') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.titre}>RateMyBackflip</Text>
+        </View>
+
+        <Image
+          source={require('../../assets/backflip-illustration.png')}
+          style={styles.illustration}
+          resizeMode="contain"
+        />
+
+        <View style={styles.boutonsContainer}>
+          <Pressable style={styles.bouton} onPress={handleVoirNote}>
+            <Text style={styles.boutonTexte}>Voir ma note !</Text>
+          </Pressable>
         </View>
       </View>
     );
