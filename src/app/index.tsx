@@ -1,11 +1,52 @@
-import { useRouter } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-
-// Statut simulé pour l'instant — sera remplacé par la vraie donnée Supabase plus tard
-const aVideoEnAttente = false;
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ensureUser, supabase } from '../lib/supabase';
 
 export default function AccueilScreen() {
   const router = useRouter();
+  const [chargement, setChargement] = useState(true);
+  const [aVideoEnAttente, setAVideoEnAttente] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let annule = false;
+
+      const verifierStatut = async () => {
+        setChargement(true);
+        try {
+          const user = await ensureUser();
+          const { data, error } = await supabase
+            .from('videos')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('statut', 'en_attente')
+            .limit(1);
+
+          if (!annule) {
+            if (error) {
+              console.log('Erreur vérification statut :', error.message);
+              setAVideoEnAttente(false);
+            } else {
+              setAVideoEnAttente((data?.length ?? 0) > 0);
+            }
+          }
+        } catch (erreur: any) {
+          console.log('Erreur ensureUser :', erreur.message);
+        } finally {
+          if (!annule) {
+            setChargement(false);
+          }
+        }
+      };
+
+      verifierStatut();
+
+      return () => {
+        annule = true;
+      };
+    }, [])
+  );
 
   const handleFilmer = () => {
     router.push({ pathname: '/consignes', params: { mode: 'filmer' } });
@@ -15,18 +56,33 @@ export default function AccueilScreen() {
     router.push({ pathname: '/consignes', params: { mode: 'importer' } });
   };
 
+  if (chargement) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.statutContainer}>
+          <ActivityIndicator color="#c6a15b" size="large" />
+        </View>
+      </View>
+    );
+  }
+
   if (aVideoEnAttente) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.titre}>RateMyBackflip</Text>
         </View>
-        <View style={styles.statutContainer}>
+
+        <View style={styles.milieuAttente}>
+          <Image
+            source={require('../../assets/backflip-illustration.png')}
+            style={styles.illustration}
+            resizeMode="contain"
+          />
           <Text style={styles.statut}>
             Ta vidéo est en cours de notation.{'\n'}Reviens un peu plus tard !
           </Text>
         </View>
-        <View style={styles.espaceVide} />
       </View>
     );
   }
@@ -84,14 +140,19 @@ const styles = StyleSheet.create({
   statutContainer: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  milieuAttente: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 20,
   },
   statut: {
     fontSize: 16,
     color: '#ffffff',
     textAlign: 'center',
-  },
-  espaceVide: {
-    height: 1,
+    marginTop: 128,
   },
   illustration: {
     width: 330,
