@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -59,13 +60,17 @@ export default function AccueilScreen() {
     }, [])
   );
 
-  const handleFilmer = () => {
-    router.push({ pathname: '/consignes', params: { mode: 'filmer' } });
+  const naviguerVersConsignes = async (mode: 'filmer' | 'importer') => {
+    const consentement = await AsyncStorage.getItem('consentement_confidentialite');
+    if (consentement === 'true') {
+      router.push({ pathname: '/consignes', params: { mode } });
+    } else {
+      router.push({ pathname: '/consentement', params: { mode } });
+    }
   };
 
-  const handleImporter = () => {
-    router.push({ pathname: '/consignes', params: { mode: 'importer' } });
-  };
+  const handleFilmer = () => naviguerVersConsignes('filmer');
+  const handleImporter = () => naviguerVersConsignes('importer');
 
   const handleVoirNote = () => {
     if (videoId) {
@@ -83,54 +88,13 @@ export default function AccueilScreen() {
     );
   }
 
-  if (etat === 'en_attente') {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.titre}>RateMyBackflip</Text>
-        </View>
-
-        <View style={styles.milieuAttente}>
-          <Image
-            source={require('../../assets/backflip-illustration.png')}
-            style={styles.illustration}
-            resizeMode="contain"
-          />
-          <Text style={styles.statut}>
-            Ta vidéo est en cours de notation.{'\n'}Reviens un peu plus tard !
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (etat === 'notee') {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.titre}>RateMyBackflip</Text>
-        </View>
-
-        <Image
-          source={require('../../assets/backflip-illustration.png')}
-          style={styles.illustration}
-          resizeMode="contain"
-        />
-
-        <View style={styles.boutonsContainer}>
-          <Pressable style={styles.bouton} onPress={handleVoirNote}>
-            <Text style={styles.boutonTexte}>Voir ma note !</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.titre}>RateMyBackflip</Text>
-        <Text style={styles.sousTitre}>Montre-nous ton salto arrière</Text>
+        <Text style={[styles.sousTitre, etat !== 'normal' && styles.sousTitreCache]}>
+          Montre-nous ton salto arrière
+        </Text>
       </View>
 
       <Image
@@ -139,14 +103,31 @@ export default function AccueilScreen() {
         resizeMode="contain"
       />
 
-      <View style={styles.boutonsContainer}>
-        <Pressable style={styles.bouton} onPress={handleFilmer}>
-          <Text style={styles.boutonTexte}>Filmer</Text>
-        </Pressable>
+      <View style={styles.bas}>
+        {etat === 'normal' && (
+          <View style={styles.boutonsContainer}>
+            <Pressable style={styles.bouton} onPress={handleFilmer}>
+              <Text style={styles.boutonTexte}>Filmer</Text>
+            </Pressable>
+            <Pressable style={[styles.bouton, styles.boutonSecondaire]} onPress={handleImporter}>
+              <Text style={styles.boutonTexteSecondaire}>Importer depuis la galerie</Text>
+            </Pressable>
+          </View>
+        )}
 
-        <Pressable style={[styles.bouton, styles.boutonSecondaire]} onPress={handleImporter}>
-          <Text style={styles.boutonTexteSecondaire}>Importer depuis la galerie</Text>
-        </Pressable>
+        {etat === 'en_attente' && (
+          <Text style={styles.statut}>
+            Ta vidéo est en cours de notation.{'\n'}Reviens un peu plus tard !
+          </Text>
+        )}
+
+        {etat === 'notee' && (
+          <View style={styles.boutonsContainer}>
+            <Pressable style={styles.bouton} onPress={handleVoirNote}>
+              <Text style={styles.boutonTexte}>Voir ma note !</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -159,7 +140,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 70,
     paddingBottom: 50,
-    justifyContent: 'space-between',
   },
   header: {
     alignItems: 'center',
@@ -176,27 +156,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
+  sousTitreCache: {
+    opacity: 0,
+  },
   statutContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  milieuAttente: {
+  illustration: {
+    width: 330,
+    height: 330,
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  bas: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 20,
+    justifyContent: 'flex-end',
   },
   statut: {
     fontSize: 16,
     color: '#ffffff',
     textAlign: 'center',
-    marginTop: 128,
-  },
-  illustration: {
-    width: 330,
-    height: 330,
-    alignSelf: 'center',
   },
   boutonsContainer: {
     width: '100%',
