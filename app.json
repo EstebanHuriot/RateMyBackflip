@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "RateMyBackflip",
-    "slug": "RateMyBackflip",
+    "slug": "rate-my-backflip",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -39,6 +39,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "69059fc5-2312-42e4-bd42-40d2b10c5dc9"
+      }
+    },
+    "owner": "ratemybackflipapp"
   }
 }
