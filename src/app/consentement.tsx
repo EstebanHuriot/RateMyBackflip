@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const URL_POLITIQUE = 'https://ratemybackflip.netlify.app/politique-confidentialite';
+const URL_POLITIQUE = 'https://curious-taffy-90044b.netlify.app/';
 
 export default function ConsentementScreen() {
   const router = useRouter();
